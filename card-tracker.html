@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>卡費追蹤器</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161921;
+    --surface2: #1e2330;
+    --border: #2a3040;
+    --accent: #00e5b0;
+    --accent2: #ff6b6b;
+    --accent3: #ffd166;
+    --text: #e8eaf0;
+    --text2: #7a8499;
+    --text3: #4a5368;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  .logo span { color: var(--text2); }
+
+  .header-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* LAYOUT */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-card.green::before { background: var(--accent); }
+  .stat-card.red::before { background: var(--accent2); }
+  .stat-card.yellow::before { background: var(--accent3); }
+  .stat-card.blue::before { background: #5b8dee; }
+
+  .stat-card:hover { border-color: #3a4460; }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .stat-value .currency {
+    font-size: 14px;
+    color: var(--text2);
+    margin-right: 2px;
+  }
+
+  .stat-sub {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  /* MAIN GRID */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .upload-zone:hover {
+    border-color: var(--accent);
+    background: rgba(0, 229, 176, 0.03);
+  }
+
+  .upload-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(0, 229, 176, 0.06);
+  }
+
+  .upload-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+
+  .upload-text {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  .upload-text strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .upload-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  #file-input { display: none; }
+
+  /* PARSING STATUS */
+  .parsing-status {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 229, 176, 0.07);
+    border: 1px solid rgba(0, 229, 176, 0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .parsing-status.show { display: flex; }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(0, 229, 176, 0.3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TRANSACTIONS TABLE */
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .table-title {
+    font-size: 13px;
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .filter-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active, .filter-btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .tx-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tx-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    transition: all 0.15s;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tx-item:hover {
+    border-color: #3a4460;
+    transform: translateX(2px);
+  }
+
+  .tx-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .tx-date .month { font-size: 10px; }
+  .tx-date .day { font-size: 16px; font-weight: 500; color: var(--text2); }
+
+  .tx-info { min-width: 0; }
+
+  .tx-merchant {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+
+  .tx-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tx-card {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+  .tx-owner {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .tx-owner-Gino { background: rgba(91,141,238,0.15); color: #5b8dee; }
+  .tx-owner-Lola { background: rgba(255,107,107,0.15); color: #ff8a8a; }
+
+  .tx-category {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .tx-right { text-align: right; }
+
+  .tx-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .tx-amount.negative { color: var(--accent); }
+  .tx-amount.positive { color: var(--accent2); }
+
+  /* CATEGORY COLORS */
+  .cat-餐飲 { background: rgba(255, 107, 107, 0.15); color: #ff8a8a; }
+  .cat-油費 { background: rgba(255, 209, 102, 0.15); color: #ffd166; }
+  .cat-訂閱 { background: rgba(91, 141, 238, 0.15); color: #8ab0f5; }
+  .cat-超商 { background: rgba(0, 229, 176, 0.15); color: #00e5b0; }
+  .cat-購物 { background: rgba(180, 100, 255, 0.15); color: #c47dff; }
+  .cat-服務費 { background: rgba(120, 120, 140, 0.15); color: #9090a8; }
+  .cat-繳費 { background: rgba(255, 155, 50, 0.15); color: #ffb566; }
+  .cat-其他 { background: rgba(80, 90, 110, 0.15); color: #6a7590; }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+
+  /* CATEGORY BREAKDOWN */
+  .cat-breakdown { display: flex; flex-direction: column; gap: 10px; }
+
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cat-name {
+    font-size: 12px;
+    color: var(--text2);
+    width: 52px;
+    flex-shrink: 0;
+  }
+
+  .cat-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .cat-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .cat-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    width: 32px;
+    text-align: right;
+  }
+
+  /* CARD BREAKDOWN */
+  .card-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .card-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+  }
+
+  .card-name { font-size: 12px; color: var(--text2); }
+  .card-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text3);
+    font-size: 13px;
+    line-height: 1.8;
+  }
+
+  .empty-icon { font-size: 32px; margin-bottom: 12px; }
+
+  /* MONTH TABS */
+  .month-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .month-tab {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text3);
+    border-radius: 6px;
+    padding: 5px 14px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+
+  .month-tab.active {
+    background: var(--surface);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .upload-owner-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: 16px;
+    padding: 5px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.15s;
+  }
+  .upload-owner-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  /* OWNER TABS */
+  .owner-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.15s;
+  }
+  .owner-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,176,0.08);
+  }
+  .owner-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* CARD INFO */
+  .card-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .card-info-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+  .card-info-bank { color: var(--text); font-weight: 500; margin-bottom: 4px; font-size: 12px; }
+  .card-info-meta { color: var(--text3); font-family: 'DM Mono', monospace; line-height: 1.6; }
+  .card-info-owner { font-size: 10px; margin-bottom: 2px; }
+  .owner-gino { color: #5b8dee; }
+  .owner-lola { color: #ff8a8a; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .main-grid { grid-template-columns: 1fr; }
+    header { padding: 16px 20px; }
+    .container { padding: 20px 16px; }
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--text);
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    z-index: 999;
+    max-width: 280px;
+    line-height: 1.5;
+  }
+
+  .toast.show { transform: translateX(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CARD<span>/</span>TRACK</div>
+  <div class="header-meta">
+    李安峻<br>
+    <span id="current-date"></span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- OWNER TABS -->
+  <div style="display:flex; gap:10px; margin-bottom:24px; align-items:center;">
+    <button class="owner-btn active" id="owner-all" onclick="setOwner('all',this)">
+      👨‍👩‍ 全家
+    </button>
+    <button class="owner-btn" id="owner-gino" onclick="setOwner('Gino',this)">
+      🧑 Gino
+    </button>
+    <button class="owner-btn" id="owner-lola" onclick="setOwner('Lola',this)">
+      👩 Lola
+    </button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card green">
+      <div class="stat-label">本月消費</div>
+      <div class="stat-value"><span class="currency">$</span><span id="stat-total">0</span></div>
+      <div class="stat-sub" id="stat-count">共 0 筆</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">最大單筆</div>
+      <div class="stat-value"><span class="currency">$</span><span id="stat-max">0</span></div>
+      <div class="stat-sub" id="stat-max-label">—</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-label">已編預算</div>
+      <div class="stat-value"><span class="currency">$</span><span id="stat-budgeted">0</span></div>
+      <div class="stat-sub" id="stat-budgeted-count">共 0 筆</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">實際卡費</div>
+      <div class="stat-value"><span class="currency">$</span><span id="stat-actual">0</span></div>
+      <div class="stat-sub">本月消費 − 已編預算</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <!-- LEFT: UPLOAD + LIST -->
+    <div>
+      <!-- UPLOAD -->
+      <div class="upload-zone" id="upload-zone">
+        <div class="upload-icon">📱</div>
+        <div class="upload-text">
+          <strong>選擇截圖上傳</strong><br>
+          支援網銀消費明細截圖，AI 自動解析分類
+        </div>
+
+        <!-- 上傳前選持卡人 -->
+        <div style="display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap:wrap;">
+          <div style="font-size:12px; color:var(--text2); line-height:32px;">持卡人：</div>
+          <button class="upload-owner-btn active" id="uob-auto" onclick="setUploadOwner('auto', this)">自動判斷</button>
+          <button class="upload-owner-btn" id="uob-gino" onclick="setUploadOwner('Gino', this)" style="color:#5b8dee; border-color:#5b8dee33;">Gino</button>
+          <button class="upload-owner-btn" id="uob-lola" onclick="setUploadOwner('Lola', this)" style="color:#ff8a8a; border-color:#ff8a8a33;">Lola</button>
+        </div>
+
+        <!-- 選卡別 -->
+        <div style="display:flex; gap:8px; justify-content:center; margin-top:10px; align-items:center;">
+          <div style="font-size:12px; color:var(--text2);">卡別：</div>
+          <select id="upload-card-select" onchange="setUploadCard(this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
+            <option value="auto">自動判斷</option>
+          </select>
+        </div>
+
+        <!-- 計入月份 -->
+        <div style="display:flex; gap:8px; justify-content:center; margin-top:10px; align-items:center;">
+          <div style="font-size:12px; color:var(--text2);">計入月份：</div>
+          <select id="upload-month-select" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
+            <option value="auto">依截圖日期</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
+          <div style="position:relative; display:inline-block;">
+            <button style="background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:10px 22px;font-size:13px;cursor:pointer;font-weight:500;">
+              📂 選擇檔案
+            </button>
+            <input type="file" id="file-input" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
+          </div>
+          <button onclick="triggerPaste()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:8px;padding:10px 22px;font-size:13px;cursor:pointer;">
+            📋 貼上截圖 (⌘V)
+          </button>
+        </div>
+        <div class="upload-hint" style="margin-top:10px;">PNG / JPG · 玉山 · 國泰 · 台新 · 富邦 · 中信</div>
+      </div>
+
+      <!-- PARSING STATUS -->
+      <div class="parsing-status" id="parsing-status">
+        <div class="spinner"></div>
+        <span id="parsing-text">正在解析截圖...</span>
+      </div>
+
+      <!-- MONTH TABS -->
+      <div class="month-tabs" id="month-tabs"></div>
+
+      <!-- TABLE HEADER -->
+      <div class="table-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="table-title" id="tx-count-label">全部消費</div>
+          <button onclick="openManualModal()" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:500;">+ 手動新增</button>
+          <button onclick="exportToCSV()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;">📥 匯出</button>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+          <select id="filter-bank" onchange="filterBank(this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:5px 10px;font-size:11px;outline:none;cursor:pointer;font-family:'DM Mono',monospace;">
+            <option value="all">全部銀行</option>
+          </select>
+          <div class="filter-row">
+            <button class="filter-btn active" onclick="filterCat('all', this)">全部</button>
+            <button class="filter-btn" onclick="filterCat('餐飲', this)">餐飲</button>
+            <button class="filter-btn" onclick="filterCat('油費', this)">油費</button>
+            <button class="filter-btn" onclick="filterCat('訂閱', this)">訂閱</button>
+            <button class="filter-btn" onclick="filterCat('超商', this)">超商</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TX LIST -->
+      <div class="tx-list" id="tx-list">
+        <div class="empty-state">
+          <div class="empty-icon">📂</div>
+          尚無消費記錄<br>上傳截圖開始記錄
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SIDEBAR -->
+    <div class="sidebar">
+      <!-- 信用卡消費整合面板 -->
+      <div class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div class="panel-title" style="margin:0;">信用卡消費</div>
+          <button onclick="openCardModal()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;">⚙ 管理</button>
+        </div>
+
+        <!-- Gino 卡片（有 section id 控制顯示） -->
+        <div id="gino-section">
+          <div style="font-size:11px; color:#5b8dee; margin-bottom:8px; font-family:'DM Mono',monospace;">● Gino</div>
+          <div id="gino-card-rows"></div>
+          <div style="border-top:1px solid var(--border); margin:14px 0;"></div>
+        </div>
+
+        <!-- Lola 卡片 -->
+        <div id="lola-section">
+          <div style="font-size:11px; color:#ff8a8a; margin-bottom:8px; font-family:'DM Mono',monospace;">● Lola</div>
+          <div id="lola-card-rows"></div>
+          <div style="border-top:1px solid var(--border); margin:14px 0;"></div>
+        </div>
+
+        <!-- 消費類別分析 -->
+        <div style="font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">消費類別分析</div>
+        <div class="cat-breakdown" id="cat-breakdown">
+          <div style="color: var(--text3); font-size: 12px; text-align:center; padding: 8px 0;">上傳截圖後顯示</div>
+        </div>
+      </div>
+
+      <!-- 固定開銷面板 -->
+      <div class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div class="panel-title" style="margin:0;">本月固定開銷</div>
+          <button onclick="openFixedModal()" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:500;">+ 設定</button>
+        </div>
+        <div id="fixed-expense-list">
+          <div style="color:var(--text3);font-size:12px;text-align:center;padding:12px 0;">尚未設定固定開銷</div>
+        </div>
+        <div id="fixed-expense-total" style="display:none; border-top:1px solid var(--border); margin-top:12px; padding-top:10px; display:flex; justify-content:space-between;">
+          <span style="font-size:12px; color:var(--text2);">本月合計</span>
+          <span style="font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:var(--accent);" id="fixed-total-amount">$0</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 手動新增消費 Modal -->
+<div id="manual-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:300; align-items:center; justify-content:center;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; width:400px; max-width:90vw;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div style="font-size:15px; font-weight:500; color:var(--text);">手動新增消費</div>
+      <button onclick="closeManualModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div style="display:grid; gap:10px;">
+      <input id="manual-merchant" placeholder="商家名稱" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;width:100%;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <input id="manual-amount" type="number" placeholder="金額" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+        <input id="manual-date" type="date" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+      </div>
+      <div style="display:grid; grid-template-columns:auto 1fr; gap:8px; align-items:center;">
+        <div style="font-size:12px;color:var(--text2);">記帳月份：</div>
+        <input id="manual-billing" type="month" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <select id="manual-owner" onchange="updateManualCardSelect()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+          <option value="Gino">Gino</option>
+          <option value="Lola">Lola</option>
+        </select>
+        <select id="manual-card" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;"></select>
+      </div>
+      <select id="manual-category" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+        <option>餐飲</option><option>油費</option><option>訂閱</option><option>超商</option>
+        <option>購物</option><option>服務費</option><option>繳費</option><option>其他</option>
+      </select>
+      <button onclick="saveManualTx()" style="background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:10px;font-size:13px;cursor:pointer;font-weight:500;">新增</button>
+    </div>
+  </div>
+</div>
+
+<!-- 編輯消費 Modal -->
+<div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:300; align-items:center; justify-content:center;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; width:400px; max-width:90vw;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div style="font-size:15px; font-weight:500; color:var(--text);">編輯消費明細</div>
+      <button onclick="closeEditModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div style="display:grid; gap:10px;">
+      <input id="edit-merchant" placeholder="商家名稱" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <input id="edit-amount" type="number" placeholder="金額" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+        <input id="edit-date" type="date" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+      </div>
+      <div style="display:grid; grid-template-columns:auto 1fr; gap:8px; align-items:center;">
+        <div style="font-size:12px;color:var(--text2);">記帳月份：</div>
+        <input id="edit-billing-date" type="month" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <select id="edit-owner" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+          <option value="Gino">Gino</option>
+          <option value="Lola">Lola</option>
+        </select>
+        <select id="edit-card" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;"></select>
+      </div>
+      <select id="edit-category" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+        <option>餐飲</option><option>油費</option><option>訂閱</option><option>超商</option>
+        <option>購物</option><option>服務費</option><option>繳費</option><option>其他</option>
+      </select>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
+        <button onclick="saveEdit()" style="background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:10px;font-size:13px;cursor:pointer;font-weight:500;">儲存</button>
+        <button onclick="deleteCurrentTx()" style="background:rgba(255,107,107,0.15);color:#ff8a8a;border:1px solid rgba(255,107,107,0.3);border-radius:8px;padding:10px;font-size:13px;cursor:pointer;">刪除這筆</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 信用卡管理 Modal -->
+<div id="card-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200; align-items:center; justify-content:center;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; width:420px; max-width:90vw; max-height:85vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div style="font-size:15px; font-weight:500; color:var(--text);">信用卡管理</div>
+      <button onclick="closeCardModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+
+    <!-- 新增表單 -->
+    <div style="background:var(--surface2); border-radius:10px; padding:16px; margin-bottom:20px;">
+      <div style="font-size:11px; color:var(--text3); margin-bottom:12px; font-family:'DM Mono',monospace;">新增信用卡</div>
+      <div style="display:grid; gap:10px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <input id="ci-name" placeholder="卡片暱稱（例：玉山）" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+          <input id="ci-bank" placeholder="銀行名稱（例：玉山銀行）" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+          <select id="ci-owner" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+            <option value="Gino">Gino</option>
+            <option value="Lola">Lola</option>
+          </select>
+          <input id="ci-billing" type="number" placeholder="結帳日" min="1" max="31" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+          <input id="ci-payment" type="number" placeholder="扣款日" min="1" max="31" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+        </div>
+        <button onclick="addCard()" style="background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:10px;font-size:13px;cursor:pointer;font-weight:500;">新增</button>
+      </div>
+    </div>
+
+    <!-- Gino 卡片列表 -->
+    <div style="font-size:11px; color:#5b8dee; margin-bottom:8px; font-family:'DM Mono',monospace;">● Gino</div>
+    <div id="card-modal-gino" style="margin-bottom:16px;"></div>
+
+    <!-- Lola 卡片列表 -->
+    <div style="font-size:11px; color:#ff8a8a; margin-bottom:8px; font-family:'DM Mono',monospace;">● Lola</div>
+    <div id="card-modal-lola"></div>
+  </div>
+</div>
+
+<!-- 固定開銷設定 Modal -->
+<div id="fixed-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200; align-items:center; justify-content:center;">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; width:420px; max-width:90vw; max-height:85vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div style="font-size:15px; font-weight:500; color:var(--text);">固定開銷設定</div>
+      <button onclick="closeFixedModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+
+    <!-- 新增表單 -->
+    <div style="background:var(--surface2); border-radius:10px; padding:16px; margin-bottom:20px;">
+      <div style="font-size:11px; color:var(--text3); margin-bottom:12px; font-family:'DM Mono',monospace;">新增項目</div>
+      <div style="display:grid; gap:10px;">
+        <input id="fi-name" placeholder="項目名稱（例：手機電信費）" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;width:100%;outline:none;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <input id="fi-amount" type="number" placeholder="金額" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+          <select id="fi-month" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+            <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+            <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+            <option value="0">每月</option>
+          </select>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <select id="fi-owner" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+            <option value="Gino">Gino</option>
+            <option value="Lola">Lola</option>
+            <option value="家庭">家庭共同</option>
+          </select>
+          <select id="fi-type" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;" onchange="toggleInstallment()">
+            <option value="fixed">固定費用</option>
+            <option value="installment">分期付款</option>
+          </select>
+        </div>
+        <!-- 分期設定（預設隱藏） -->
+        <div id="installment-fields" style="display:none; grid-template-columns:1fr 1fr; gap:8px;">
+          <input id="fi-total-periods" type="number" placeholder="總期數" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+          <input id="fi-current-period" type="number" placeholder="目前第幾期" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
+        </div>
+        <input id="fi-note" placeholder="備註（選填）" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;width:100%;outline:none;">
+        <button onclick="addFixedExpense()" style="background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:10px;font-size:13px;cursor:pointer;font-weight:500;">新增</button>
+      </div>
+    </div>
+
+    <!-- 已設定列表 -->
+    <div style="font-size:11px; color:var(--text3); margin-bottom:10px; font-family:'DM Mono',monospace;">已設定項目</div>
+    <div id="fixed-modal-list"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== SUPABASE CONFIG ====================
+const SUPABASE_URL = 'https://shigsojhaoqxbzrmhupo.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoaWdzb2poYW9xeGJ6cm1odXBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTU4OTIsImV4cCI6MjA5NDIzMTg5Mn0.7CFMdTnr7myJfmGZde9H70YtH_iQUaCV44Oquh25uIo';
+
+const sb = {
+  headers: {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`
+  },
+  async get(table, params = '') {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, { headers: this.headers });
+    return r.json();
+  },
+  async insert(table, data) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: { ...this.headers, 'Prefer': 'return=representation' },
+      body: JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async update(table, id, data) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { ...this.headers, 'Prefer': 'return=representation' },
+      body: JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async delete(table, id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'DELETE', headers: this.headers
+    });
+  },
+  async upsert(table, data, onConflict = 'id') {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=${onConflict}`, {
+      method: 'POST',
+      headers: { ...this.headers, 'Prefer': 'return=representation,resolution=merge-duplicates' },
+      body: JSON.stringify(data)
+    });
+    return r.json();
+  }
+};
+
+// ==================== DATA ====================
+let allTransactions = [];
+let currentOwner = 'all';
+let currentFilter = 'all';
+let currentMonth = 'all';
+let uploadOwner = 'auto'; // 上傳前選擇的持卡人
+let uploadCard = 'auto';  // 上傳前選擇的卡別
+
+function setUploadOwner(owner, btn) {
+  uploadOwner = owner;
+  document.querySelectorAll('.upload-owner-btn').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = 'var(--surface2)';
+    b.style.color = b.id === 'uob-gino' ? '#5b8dee' : b.id === 'uob-lola' ? '#ff8a8a' : 'var(--text2)';
+  });
+  btn.classList.add('active');
+  btn.style.background = owner === 'Gino' ? '#5b8dee' : owner === 'Lola' ? '#ff8a8a' : 'var(--accent)';
+  btn.style.color = 'var(--bg)';
+  uploadCard = 'auto';
+  updateCardSelect(owner);
+}
+
+function setUploadCard(val) {
+  uploadCard = val;
+}
+
+function updateCardSelect(owner) {
+  const sel = document.getElementById('upload-card-select');
+  if (!sel) return;
+  const cards = getCards();
+  let options = '<option value="auto">自動判斷</option>';
+  if (owner === 'auto') {
+    // 顯示全部卡片
+    ['Gino','Lola'].forEach(o => {
+      (cards[o]||[]).forEach(c => {
+        options += `<option value="${c.bank}|${o}">${o}・${c.name}（${c.bank}）</option>`;
+      });
+    });
+  } else {
+    (cards[owner]||[]).forEach(c => {
+      options += `<option value="${c.bank}|${owner}">${c.name}（${c.bank}）</option>`;
+    });
+  }
+  sel.innerHTML = options;
+  uploadCard = 'auto';
+}
+
+function updateMonthSelect() {
+  const sel = document.getElementById('upload-month-select');
+  if (!sel) return;
+  const now = new Date();
+  let opts = '<option value="auto">依截圖日期</option>';
+  for (let i = -1; i <= 1; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label = `${d.getFullYear()}年${d.getMonth()+1}月`;
+    opts += `<option value="${val}">${label}</option>`;
+  }
+  // 預設選當月
+  sel.innerHTML = opts;
+  sel.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+}
+
+// ==================== CARDS CONFIG ====================
+const DEFAULT_CARDS = {
+  Gino: [
+    { id: 'gino_taishin', name: '台新', bank: '台新銀行', billing: 22, payment: 7, owner: 'Gino' },
+    { id: 'gino_ctbc',    name: '中信', bank: '中國信託', billing: 20, payment: 6, owner: 'Gino' },
+    { id: 'gino_yushan',  name: '玉山', bank: '玉山銀行', billing: 21, payment: 6, owner: 'Gino' },
+  ],
+  Lola: [
+    { id: 'lola_yushan',  name: '玉山', bank: '玉山銀行', billing: 25, payment: 10, owner: 'Lola' },
+    { id: 'lola_cathay',  name: '國泰', bank: '國泰世華', billing: 23, payment: 7, owner: 'Lola' },
+    { id: 'lola_taishin', name: '台新', bank: '台新銀行', billing: 27, payment: 13, owner: 'Lola' },
+    { id: 'lola_fubon',   name: '富邦', bank: '台北富邦', billing: 20, payment: 5, owner: 'Lola' },
+  ]
+};
+
+// CARDS 從 Supabase 載入，初始用 DEFAULT 避免空白
+let CARDS = JSON.parse(JSON.stringify(DEFAULT_CARDS));
+
+function getCards() { return CARDS; }
+
+async function saveCards(c) {
+  CARDS = c;
+}
+
+async function saveCardToDb(card) {
+  await sb.upsert('cards', {
+    id: card.id, name: card.name, bank: card.bank,
+    billing: card.billing, payment: card.payment, owner: card.owner
+  });
+}
+
+async function saveData() {
+  // 僅更新 allTransactions 的最後一筆（新增時呼叫）
+}
+
+async function saveTx(tx) {
+  await sb.upsert('transactions', {
+    id: tx.id, date: tx.date, merchant: tx.merchant,
+    amount: tx.amount, card: tx.card, category: tx.category,
+    owner: tx.owner, budgeted: tx.budgeted || false,
+    billing_date: tx.billing_date || null
+  });
+}
+
+async function deleteTxRemote(id) {
+  await sb.delete('transactions', id);
+}
+
+// ==================== CATEGORY AUTO-CLASSIFY ====================
+function classifyMerchant(merchant) {
+  const m = merchant.toLowerCase();
+  if (m.includes('中油') || m.includes('加油') || m.includes('油站')) return '油費';
+  if (m.includes('apple') || m.includes('google') || m.includes('netflix') || m.includes('spotify') || m.includes('訂閱')) return '訂閱';
+  if (m.includes('全家') || m.includes('7-eleven') || m.includes('統一超商') || m.includes('萊爾富') || m.includes('ok mart')) return '超商';
+  if (m.includes('餐') || m.includes('食') || m.includes('廚') || m.includes('飯') || m.includes('麵') || m.includes('鴨') || m.includes('牛') || m.includes('豬') || m.includes('火鍋') || m.includes('pizza') || m.includes('burger') || m.includes('cafe') || m.includes('咖啡')) return '餐飲';
+  if (m.includes('誠品') || m.includes('momo') || m.includes('蝦皮') || m.includes('pchome') || m.includes('shopping') || m.includes('百貨') || m.includes('購物')) return '購物';
+  if (m.includes('服務費') || m.includes('手續費') || m.includes('管理費') || m.includes('交易服務')) return '服務費';
+  if (m.includes('繳費') || m.includes('扣繳') || m.includes('電費') || m.includes('水費') || m.includes('瓦斯')) return '繳費';
+  return '其他';
+}
+
+// ==================== RENDER ====================
+const CAT_COLORS = {
+  '餐飲': '#ff8a8a', '油費': '#ffd166', '訂閱': '#8ab0f5',
+  '超商': '#00e5b0', '購物': '#c47dff', '服務費': '#9090a8',
+  '繳費': '#ffb566', '其他': '#6a7590'
+};
+
+function getMonths() {
+  const months = [...new Set(allTransactions.map(t => t.date.slice(0,7)))].sort().reverse();
+  return months;
+}
+
+function getFiltered() {
+  let txs = [...allTransactions];
+  if (currentOwner !== 'all') txs = txs.filter(t => t.owner === currentOwner);
+  if (currentMonth !== 'all') txs = txs.filter(t => {
+    const checkDate = t.billing_date || t.date;
+    return checkDate && checkDate.startsWith(currentMonth);
+  });
+  if (currentFilter !== 'all') txs = txs.filter(t => t.category === currentFilter);
+  if (currentBank !== 'all') {
+    const [filterOwner, filterCard] = currentBank.split('|');
+    txs = txs.filter(t => t.card === filterCard && (filterOwner === 'other' ? !['Gino','Lola'].includes(t.owner) : t.owner === filterOwner));
+  }
+  return txs.sort((a,b) => b.date.localeCompare(a.date));
+}
+
+function renderMonthTabs() {
+  const months = getMonths();
+  const el = document.getElementById('month-tabs');
+  let html = `<button class="month-tab ${currentMonth==='all'?'active':''}" onclick="setMonth('all',this)">全部</button>`;
+  months.forEach(m => {
+    const [y, mo] = m.split('-');
+    html += `<button class="month-tab ${currentMonth===m?'active':''}" onclick="setMonth('${m}',this)">${y}/${mo}</button>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderList() {
+  const txs = getFiltered();
+  const el = document.getElementById('tx-list');
+
+  if (txs.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div>沒有符合的記錄</div>`;
+    return;
+  }
+
+  document.getElementById('tx-count-label').textContent = `共 ${txs.length} 筆`;
+
+  el.innerHTML = txs.map(t => {
+    const d = new Date(t.date);
+    const month = (d.getMonth()+1).toString().padStart(2,'0');
+    const day = d.getDate().toString().padStart(2,'0');
+    const isNeg = t.amount < 0;
+
+    // 記帳日期
+    let billingLabel = '';
+    if (t.billing_date && t.billing_date !== t.date) {
+      const bd = new Date(t.billing_date);
+      billingLabel = `<div style="font-size:9px;color:#ffd166;font-family:'DM Mono',monospace;margin-top:2px;">${bd.getMonth()+1}月記帳</div>`;
+    }
+
+    return `
+      <div class="tx-item">
+        <div class="tx-date">
+          <div class="month">${month}月</div>
+          <div class="day">${day}</div>
+          ${billingLabel}
+        </div>
+        <div class="tx-info">
+          <div class="tx-merchant">${t.merchant}</div>
+          <div class="tx-meta">
+            <span class="tx-owner tx-owner-${t.owner||'?'}" onclick="toggleTxOwner('${t.id}')" style="cursor:pointer;" title="點擊切換持卡人">${t.owner||'?'}</span>
+            <span class="tx-card">${t.card}</span>
+            <span class="tx-category cat-${t.category}">${t.category}</span>
+          </div>
+        </div>
+        <div class="tx-right">
+          <div class="tx-amount ${isNeg?'negative':'positive'}">
+            ${isNeg?'−':''}$${Math.abs(t.amount).toLocaleString()}
+          </div>
+          <div style="margin-top:6px; display:flex; gap:4px; justify-content:flex-end; flex-wrap:wrap;">
+            ${!isNeg ? `<button onclick="toggleBudget('${t.id}')" style="
+              font-size:10px; padding:2px 7px; border-radius:4px; cursor:pointer;
+              border:1px solid ${t.budgeted ? '#ffd166' : 'var(--border)'};
+              background:${t.budgeted ? 'rgba(255,209,102,0.15)' : 'transparent'};
+              color:${t.budgeted ? '#ffd166' : 'var(--text3)'};
+            ">${t.budgeted ? '✓預算' : '+預算'}</button>` : ''}
+            <button onclick="openEditModal('${t.id}')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);">✏️</button>
+            <button onclick="deleteTx('${t.id}')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,107,107,0.3);background:transparent;color:#ff8a8a;">🗑</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderStats() {
+  let txs = [...allTransactions];
+  if (currentOwner !== 'all') txs = txs.filter(t => t.owner === currentOwner);
+  if (currentMonth !== 'all') txs = txs.filter(t => {
+    const checkDate = t.billing_date || t.date;
+    return checkDate && checkDate.startsWith(currentMonth);
+  });
+  const positive = txs.filter(t => t.amount > 0);
+
+  const total = positive.reduce((s,t) => s+t.amount, 0);
+  document.getElementById('stat-total').textContent = total.toLocaleString();
+  document.getElementById('stat-count').textContent = `共 ${positive.length} 筆`;
+
+  const maxTx = [...positive].sort((a,b) => b.amount-a.amount)[0];
+  document.getElementById('stat-max').textContent = maxTx ? maxTx.amount.toLocaleString() : '0';
+  document.getElementById('stat-max-label').textContent = maxTx ? maxTx.merchant.slice(0,10) : '—';
+
+  const budgeted = positive.filter(t => t.budgeted);
+  const budgetedTotal = budgeted.reduce((s,t) => s+t.amount, 0);
+  const actualTotal = total - budgetedTotal;
+  document.getElementById('stat-budgeted').textContent = budgetedTotal.toLocaleString();
+  document.getElementById('stat-budgeted-count').textContent = `共 ${budgeted.length} 筆`;
+  document.getElementById('stat-actual').textContent = actualTotal.toLocaleString();
+}
+
+function renderCatBreakdown() {
+  let txs = [...allTransactions];
+  if (currentMonth !== 'all') txs = txs.filter(t => {
+    const checkDate = t.billing_date || t.date;
+    return checkDate && checkDate.startsWith(currentMonth);
+  });
+  txs = txs.filter(t => t.amount > 0);
+
+  const totals = {};
+  txs.forEach(t => { totals[t.category] = (totals[t.category]||0) + t.amount; });
+  const grandTotal = Object.values(totals).reduce((s,v)=>s+v,0);
+
+  const sorted = Object.entries(totals).sort((a,b)=>b[1]-a[1]);
+  const el = document.getElementById('cat-breakdown');
+
+  if (!sorted.length) {
+    el.innerHTML = `<div style="color: var(--text3); font-size: 12px; text-align:center; padding: 12px 0;">上傳截圖後顯示</div>`;
+    return;
+  }
+
+  el.innerHTML = sorted.map(([cat, amt]) => {
+    const pct = grandTotal ? Math.round(amt/grandTotal*100) : 0;
+    return `
+      <div class="cat-row">
+        <div class="cat-name">${cat}</div>
+        <div class="cat-bar-wrap">
+          <div class="cat-bar" style="width:${pct}%; background:${CAT_COLORS[cat]||'#6a7590'}"></div>
+        </div>
+        <div class="cat-pct">${pct}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCardBreakdown() {
+  let txs = [...allTransactions];
+  if (currentOwner !== 'all') txs = txs.filter(t => t.owner === currentOwner);
+  if (currentMonth !== 'all') txs = txs.filter(t => {
+    const checkDate = t.billing_date || t.date;
+    return checkDate && checkDate.startsWith(currentMonth);
+  });
+  txs = txs.filter(t => t.amount > 0);
+
+  const totals = {};
+  txs.forEach(t => {
+    const key = (t.owner || 'Gino') + '|' + t.card;
+    totals[key] = (totals[key] || 0) + t.amount;
+  });
+
+  function renderOwnerRows(ownerName, cards, elId) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.innerHTML = cards.map(c => {
+      const key = ownerName + '|' + c.bank;
+      const amt = totals[key] || 0;
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-size:13px; color:var(--text); font-weight:500;">${c.name}</div>
+            <div style="font-size:10px; color:var(--text3); font-family:'DM Mono',monospace; margin-top:2px;">結帳 ${c.billing}號・扣款 ${c.payment}號</div>
+          </div>
+          <div style="font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:${amt>0?'var(--text)':'var(--text3)'};">
+            $${amt.toLocaleString()}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  renderOwnerRows('Gino', CARDS.Gino, 'gino-card-rows');
+  renderOwnerRows('Lola', CARDS.Lola, 'lola-card-rows');
+
+  // 根據 currentOwner 控制顯示
+  const ginoSection = document.getElementById('gino-section');
+  const lolaSection = document.getElementById('lola-section');
+  if (ginoSection) ginoSection.style.display = currentOwner === 'Lola' ? 'none' : 'block';
+  if (lolaSection) lolaSection.style.display = currentOwner === 'Gino' ? 'none' : 'block';
+}
+
+function renderAll() {
+  renderMonthTabs();
+  renderList();
+  renderStats();
+  renderCatBreakdown();
+  renderCardBreakdown();
+  renderCardsInfo();
+  renderFixedExpenses();
+  updateBankFilter();
+}
+
+// ==================== 手動新增消費 ====================
+function openManualModal() {
+  const now = new Date();
+  const today = now.toISOString().slice(0,10);
+  const thisMonth = today.slice(0,7);
+  document.getElementById('manual-date').value = today;
+  document.getElementById('manual-billing').value = thisMonth;
+  document.getElementById('manual-merchant').value = '';
+  document.getElementById('manual-amount').value = '';
+  updateManualCardSelect();
+  document.getElementById('manual-modal').style.display = 'flex';
+}
+
+function closeManualModal() {
+  document.getElementById('manual-modal').style.display = 'none';
+}
+
+function updateManualCardSelect() {
+  const owner = document.getElementById('manual-owner').value;
+  const sel = document.getElementById('manual-card');
+  const cards = getCards()[owner] || [];
+  sel.innerHTML = cards.map(c => `<option value="${c.bank}">${c.name}（${c.bank}）</option>`).join('');
+}
+
+async function saveManualTx() {
+  const merchant = document.getElementById('manual-merchant').value.trim();
+  const amount   = parseInt(document.getElementById('manual-amount').value);
+  const date     = document.getElementById('manual-date').value;
+  const billing  = document.getElementById('manual-billing').value;
+  const owner    = document.getElementById('manual-owner').value;
+  const card     = document.getElementById('manual-card').value;
+  const category = document.getElementById('manual-category').value;
+
+  if (!merchant || !amount || !date) { showToast('請填寫商家、金額、日期'); return; }
+
+  const billingDate = billing ? billing + '-01' : null;
+
+  // 重複檢查
+  const billingMonth = billing || date.slice(0,7);
+  const duplicate = allTransactions.find(ex => {
+    const exBilling = ex.billing_date ? ex.billing_date.slice(0,7) : (ex.date ? ex.date.slice(0,7) : '');
+    return exBilling === billingMonth && ex.date === date && ex.amount === amount;
+  });
+
+  if (duplicate) {
+    if (!confirm(`⚠️ 已有相同記錄：\n${date} ${merchant} $${amount}\n\n仍要新增？`)) return;
+  }
+
+  const tx = {
+    id: Date.now() + Math.random(),
+    date, billing_date: billingDate,
+    merchant, amount, card, category, owner, budgeted: false
+  };
+  allTransactions.push(tx);
+  await saveTx(tx);
+  renderAll();
+  closeManualModal();
+  showToast(`✅ 已新增：${merchant} $${amount}`);
+}
+
+// ==================== 匯出 Excel ====================
+function exportToCSV() {
+  let txs = [...allTransactions].filter(t => t.amount > 0);
+  if (currentOwner !== 'all') txs = txs.filter(t => t.owner === currentOwner);
+  if (currentMonth !== 'all') txs = txs.filter(t => {
+    const checkDate = t.billing_date || t.date;
+    return checkDate && checkDate.startsWith(currentMonth);
+  });
+  txs.sort((a,b) => (b.billing_date||b.date).localeCompare(a.billing_date||a.date));
+
+  const headers = ['記帳月份','消費日期','商家','金額','卡別','持卡人','類別','已編預算'];
+  const rows = txs.map(t => [
+    (t.billing_date||t.date||'').slice(0,7),
+    t.date || '',
+    t.merchant || '',
+    t.amount || 0,
+    t.card || '',
+    t.owner || '',
+    t.category || '',
+    t.budgeted ? '是' : '否'
+  ]);
+
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const bom = '\uFEFF'; // UTF-8 BOM for Excel
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const month = currentMonth !== 'all' ? currentMonth : new Date().toISOString().slice(0,7);
+  a.href = url;
+  a.download = `卡費記錄_${month}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✅ 已匯出 ${txs.length} 筆記錄`);
+}
+
+// ==================== 編輯 & 刪除 ====================
+let editingTxId = null;
+
+function openEditModal(id) {
+  const tx = allTransactions.find(t => String(t.id) === String(id));
+  if (!tx) return;
+  editingTxId = id;
+
+  document.getElementById('edit-merchant').value = tx.merchant || '';
+  document.getElementById('edit-amount').value = Math.abs(tx.amount);
+  document.getElementById('edit-date').value = tx.date;
+  document.getElementById('edit-owner').value = tx.owner || 'Gino';
+  document.getElementById('edit-category').value = tx.category || '其他';
+  const bd = tx.billing_date ? tx.billing_date.slice(0,7) : (tx.date ? tx.date.slice(0,7) : '');
+  document.getElementById('edit-billing-date').value = bd;
+
+  // 更新卡別選單
+  updateEditCardSelect(tx.owner || 'Gino', tx.card);
+
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function updateEditCardSelect(owner, currentCard) {
+  const sel = document.getElementById('edit-card');
+  const cards = getCards();
+  const ownerCards = cards[owner] || [];
+  let options = '';
+  ownerCards.forEach(c => {
+    const selected = c.bank === currentCard ? 'selected' : '';
+    options += `<option value="${c.bank}" ${selected}>${c.name}（${c.bank}）</option>`;
+  });
+  // 如果現有的卡不在清單裡，加一個選項
+  if (currentCard && !ownerCards.some(c => c.bank === currentCard)) {
+    options = `<option value="${currentCard}" selected>${currentCard}</option>` + options;
+  }
+  sel.innerHTML = options || `<option value="${currentCard||'其他'}">${currentCard||'其他'}</option>`;
+}
+
+// owner 變更時更新卡別選單
+document.addEventListener('DOMContentLoaded', () => {
+  const ownerSel = document.getElementById('edit-owner');
+  if (ownerSel) ownerSel.addEventListener('change', e => updateEditCardSelect(e.target.value, ''));
+});
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+  editingTxId = null;
+}
+
+async function saveEdit() {
+  const tx = allTransactions.find(t => String(t.id) === String(editingTxId));
+  if (!tx) return;
+
+  tx.merchant     = document.getElementById('edit-merchant').value.trim() || tx.merchant;
+  tx.amount       = parseInt(document.getElementById('edit-amount').value) || tx.amount;
+  tx.date         = document.getElementById('edit-date').value || tx.date;
+  tx.billing_date = document.getElementById('edit-billing-date').value || null;
+  tx.owner        = document.getElementById('edit-owner').value;
+  tx.card         = document.getElementById('edit-card').value;
+  tx.category     = document.getElementById('edit-category').value;
+
+  await sb.update('transactions', tx.id, {
+    merchant: tx.merchant, amount: tx.amount, date: tx.date,
+    billing_date: tx.billing_date || null,
+    owner: tx.owner, card: tx.card, category: tx.category
+  });
+  closeEditModal();
+  renderAll();
+  showToast('✅ 已儲存');
+}
+
+async function deleteTx(id) {
+  await sb.delete('transactions', id);
+  allTransactions = allTransactions.filter(t => String(t.id) !== String(id));
+  renderAll();
+  showToast('已刪除');
+}
+
+async function deleteCurrentTx() {
+  if (!editingTxId) return;
+  deleteTx(editingTxId);
+  closeEditModal();
+}
+
+// ==================== 銀行篩選 ====================
+let currentBank = 'all';
+
+function filterBank(val) {
+  currentBank = val;
+  renderList();
+}
+
+function updateBankFilter() {
+  const sel = document.getElementById('filter-bank');
+  if (!sel) return;
+  const current = sel.value;
+
+  // 把交易按 owner 分組，取出各自有消費記錄的銀行
+  const ginoBanks = [...new Set(
+    allTransactions.filter(t => t.owner === 'Gino' && t.card && t.amount > 0).map(t => t.card)
+  )].sort();
+  const lolaBanks = [...new Set(
+    allTransactions.filter(t => t.owner === 'Lola' && t.card && t.amount > 0).map(t => t.card)
+  )].sort();
+  const otherBanks = [...new Set(
+    allTransactions.filter(t => !['Gino','Lola'].includes(t.owner) && t.card && t.amount > 0).map(t => t.card)
+  )].sort();
+
+  let opts = '<option value="all">全部銀行</option>';
+
+  if (ginoBanks.length) {
+    opts += '<optgroup label="── Gino ──">';
+    ginoBanks.forEach(b => {
+      opts += `<option value="Gino|${b}" ${current===`Gino|${b}`?'selected':''}>${b}</option>`;
+    });
+    opts += '</optgroup>';
+  }
+
+  if (lolaBanks.length) {
+    opts += '<optgroup label="── Lola ──">';
+    lolaBanks.forEach(b => {
+      opts += `<option value="Lola|${b}" ${current===`Lola|${b}`?'selected':''}>${b}</option>`;
+    });
+    opts += '</optgroup>';
+  }
+
+  if (otherBanks.length) {
+    opts += '<optgroup label="── 其他 ──">';
+    otherBanks.forEach(b => {
+      opts += `<option value="other|${b}" ${current===`other|${b}`?'selected':''}>${b}</option>`;
+    });
+    opts += '</optgroup>';
+  }
+
+  sel.innerHTML = opts;
+}
+
+// ==================== 信用卡管理 ====================
+function openCardModal() {
+  document.getElementById('card-modal').style.display = 'flex';
+  renderCardModalList();
+}
+function closeCardModal() {
+  document.getElementById('card-modal').style.display = 'none';
+}
+
+async function addCard() {
+  const name    = document.getElementById('ci-name').value.trim();
+  const bank    = document.getElementById('ci-bank').value.trim();
+  const owner   = document.getElementById('ci-owner').value;
+  const billing = parseInt(document.getElementById('ci-billing').value);
+  const payment = parseInt(document.getElementById('ci-payment').value);
+
+  if (!name || !bank || !billing || !payment) { showToast('請填寫所有欄位'); return; }
+
+  const cards = getCards();
+  const id = owner.toLowerCase() + '_' + Date.now();
+  const newCard = { id, name, bank, billing, payment, owner };
+  cards[owner].push(newCard);
+  await saveCards(cards);
+  await saveCardToDb(newCard);
+  Object.assign(CARDS, cards);
+
+  ['ci-name','ci-bank','ci-billing','ci-payment'].forEach(i => document.getElementById(i).value = '');
+  renderCardModalList();
+  renderAll();
+  showToast(`✅ 已新增：${owner} 的 ${name}`);
+}
+
+async function deleteCard(owner, id) {
+  const cards = getCards();
+  cards[owner] = cards[owner].filter(c => c.id !== id);
+  await saveCards(cards);
+  await sb.delete('cards', id);
+  CARDS[owner] = cards[owner];
+  renderCardModalList();
+  renderAll();
+  showToast('已刪除');
+}
+
+function renderCardModalList() {
+  ['Gino','Lola'].forEach(owner => {
+    const el = document.getElementById('card-modal-' + owner.toLowerCase());
+    if (!el) return;
+    const cards = getCards()[owner] || [];
+    if (!cards.length) {
+      el.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:8px 0;">尚無卡片</div>`;
+      return;
+    }
+    el.innerHTML = cards.map(c => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px;">
+        <div>
+          <div style="font-size:13px;color:var(--text);font-weight:500;">${c.name} <span style="font-size:11px;color:var(--text3);font-weight:400;">· ${c.bank}</span></div>
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;">結帳 ${c.billing}號・扣款 ${c.payment}號</div>
+        </div>
+        <button onclick="deleteCard('${owner}','${c.id}')" style="background:rgba(255,107,107,0.15);border:none;color:#ff8a8a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">刪除</button>
+      </div>
+    `).join('');
+  });
+}
+
+// ==================== 固定開銷 ====================
+let fixedExpenses = [];
+
+async function saveFixed() {
+  // fixed_expenses 由各自的 add/delete 處理
+}
+
+function getCurrentMonth() {
+  if (currentMonth !== 'all') return parseInt(currentMonth.split('-')[1]);
+  return new Date().getMonth() + 1;
+}
+
+function getExpensesForMonth(month) {
+  return fixedExpenses.filter(e => {
+    if (e.type === 'fixed') return e.month === 0 || e.month === month;
+    if (e.type === 'installment') {
+      const startMonth = e.startMonth;
+      const endMonth = startMonth + e.totalPeriods - 1;
+      // 計算跨年
+      const mIdx = (month - startMonth + 12) % 12;
+      return mIdx < e.totalPeriods;
+    }
+    return false;
+  }).map(e => {
+    if (e.type === 'installment') {
+      const mIdx = (getCurrentMonth() - e.startMonth + 12) % 12;
+      return { ...e, currentPeriod: mIdx + 1 };
+    }
+    return e;
+  });
+}
+
+function renderFixedExpenses() {
+  const month = getCurrentMonth();
+  const items = getExpensesForMonth(month);
+  const listEl = document.getElementById('fixed-expense-list');
+  const totalEl = document.getElementById('fixed-total-amount');
+  if (!listEl) return;
+
+  if (!items.length) {
+    listEl.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:12px 0;">尚未設定固定開銷</div>`;
+    if (totalEl) totalEl.parentElement.style.display = 'none';
+    return;
+  }
+
+  const total = items.reduce((s, e) => s + e.amount, 0);
+  if (totalEl) {
+    totalEl.textContent = '$' + total.toLocaleString();
+    totalEl.parentElement.style.display = 'flex';
+  }
+
+  listEl.innerHTML = items.map(e => {
+    const ownerColor = e.owner === 'Gino' ? '#5b8dee' : e.owner === 'Lola' ? '#ff8a8a' : '#00e5b0';
+    const badge = e.type === 'installment'
+      ? `<span style="font-size:10px;color:#ffd166;font-family:'DM Mono',monospace;">${e.currentPeriod}/${e.totalPeriods}期</span>`
+      : (e.month === 0 ? `<span style="font-size:10px;color:var(--text3);">每月</span>` : `<span style="font-size:10px;color:var(--text3);">${e.month}月</span>`);
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:13px;color:var(--text);font-weight:500;">${e.name}</div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:3px;">
+            <span style="font-size:10px;color:${ownerColor};">● ${e.owner}</span>
+            ${badge}
+            ${e.note ? `<span style="font-size:10px;color:var(--text3);">${e.note}</span>` : ''}
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--text);">$${e.amount.toLocaleString()}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openFixedModal() {
+  document.getElementById('fixed-modal').style.display = 'flex';
+  // 預設選當月
+  document.getElementById('fi-month').value = getCurrentMonth();
+  renderFixedModalList();
+}
+
+function closeFixedModal() {
+  document.getElementById('fixed-modal').style.display = 'none';
+}
+
+function toggleInstallment() {
+  const type = document.getElementById('fi-type').value;
+  const fields = document.getElementById('installment-fields');
+  fields.style.display = type === 'installment' ? 'grid' : 'none';
+}
+
+async function addFixedExpense() {
+  const name = document.getElementById('fi-name').value.trim();
+  const amount = parseInt(document.getElementById('fi-amount').value);
+  const month = parseInt(document.getElementById('fi-month').value);
+  const owner = document.getElementById('fi-owner').value;
+  const type = document.getElementById('fi-type').value;
+  const note = document.getElementById('fi-note').value.trim();
+
+  if (!name || !amount) { showToast('請填寫名稱和金額'); return; }
+
+  const item = { id: Date.now(), name, amount, month, owner, type, note };
+
+  if (type === 'installment') {
+    const total = parseInt(document.getElementById('fi-total-periods').value);
+    const current = parseInt(document.getElementById('fi-current-period').value);
+    if (!total || !current) { showToast('請填寫分期資訊'); return; }
+    item.totalPeriods = total;
+    item.startMonth = ((month - current + 12) % 12) + 1;
+  }
+
+  // 存到 Supabase
+  const dbItem = {
+    name: item.name, amount: item.amount, month: item.month,
+    owner: item.owner, type: item.type, note: item.note || '',
+    total_periods: item.totalPeriods || null,
+    start_month: item.startMonth || null
+  };
+  const result = await sb.insert('fixed_expenses', dbItem);
+  if (result && result[0]) item.id = result[0].id;
+  fixedExpenses.push(item);
+
+  // 清空表單
+  ['fi-name','fi-amount','fi-note','fi-total-periods','fi-current-period'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  renderFixedModalList();
+  renderFixedExpenses();
+  showToast(`✅ 已新增：${name}`);
+}
+
+async function deleteFixed(id) {
+  await sb.delete('fixed_expenses', id);
+  fixedExpenses = fixedExpenses.filter(e => e.id !== id);
+  renderFixedModalList();
+  renderFixedExpenses();
+  showToast('已刪除');
+}
+
+function renderFixedModalList() {
+  const el = document.getElementById('fixed-modal-list');
+  if (!el) return;
+  if (!fixedExpenses.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:12px 0;">尚無設定</div>`;
+    return;
+  }
+  el.innerHTML = fixedExpenses.map(e => {
+    const typeLabel = e.type === 'installment' ? `分期 ${e.totalPeriods}期` : (e.month === 0 ? '每月' : `${e.month}月`);
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px;">
+        <div>
+          <div style="font-size:13px;color:var(--text);">${e.name}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;">${e.owner} · ${typeLabel} · $${e.amount.toLocaleString()}</div>
+        </div>
+        <button onclick="deleteFixed(${e.id})" style="background:rgba(255,107,107,0.15);border:none;color:#ff8a8a;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">刪除</button>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==================== FILTERS ====================
+function setOwner(owner, btn) {
+  currentOwner = owner;
+  document.querySelectorAll('.owner-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+function renderCardsInfo() {
+  // 已整合進 renderCardBreakdown
+}
+
+function toggleTxOwner(id) {
+  const tx = allTransactions.find(t => String(t.id) === String(id));
+  if (!tx) return;
+  const order = ['Gino', 'Lola', '?'];
+  const idx = order.indexOf(tx.owner);
+  tx.owner = order[(idx + 1) % order.length];
+  saveData();
+  renderAll();
+  showToast(`已改為 ${tx.owner} 的消費`);
+}
+
+async function toggleBudget(id) {
+  const tx = allTransactions.find(t => String(t.id) === String(id));
+  if (!tx) return;
+  tx.budgeted = !tx.budgeted;
+  await sb.update('transactions', tx.id, { budgeted: tx.budgeted });
+  renderAll();
+  showToast(tx.budgeted ? `✅ 已標記為已編預算` : `❌ 已取消預算標記`);
+}
+
+function filterCat(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function setMonth(m, btn) {
+  currentMonth = m;
+  document.querySelectorAll('.month-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+// ==================== UPLOAD + AI PARSE ====================
+document.addEventListener('DOMContentLoaded', () => {
+  const uploadZone = document.getElementById('upload-zone');
+  const fileInput = document.getElementById('file-input');
+  if (!fileInput || !uploadZone) return;
+
+  // 檔案選擇
+  fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+  // 拖曳
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+});
+
+// 全域鍵盤貼上 (⌘V / Ctrl+V)
+document.addEventListener('paste', e => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  const imageFiles = [];
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) imageFiles.push(file);
+    }
+  }
+  if (imageFiles.length > 0) handleFiles(imageFiles);
+});
+
+function triggerPaste() {
+  showToast('請按 ⌘V（Mac）或 Ctrl+V（Windows）貼上截圖');
+}
+
+async function handleFiles(files) {
+  for (const file of files) {
+    await parseImageWithAI(file);
+  }
+  const fi = document.getElementById('file-input');
+  if (fi) fi.value = '';
+}
+
+async function parseImageWithAI(file) {
+  showParsing(`正在解析：${file.name}...`);
+
+  const base64 = await fileToBase64(file);
+
+  // 取得上傳前選的持卡人
+  const owner = uploadOwner !== 'auto' ? uploadOwner : 'Gino';
+
+  try {
+    const response = await fetch('https://card-tracker-bot-api.onrender.com/parse-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: base64,
+        mediaType: file.type || 'image/png',
+        owner: owner
+      })
+    });
+
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error || '解析失敗');
+    const parsed = data.data;
+
+    let added = 0;
+    let duplicates = [];
+    const bankName = parsed.bank || '未知銀行';
+
+    // 手動選了卡別 → 直接用，不管 AI 說什麼
+    let finalBank = bankName;
+    let finalOwner = null;
+
+    if (uploadCard !== 'auto') {
+      const [bank, owner] = uploadCard.split('|');
+      finalBank = bank;
+      finalOwner = owner;
+    } else if (uploadOwner !== 'auto') {
+      finalOwner = uploadOwner;
+    } else {
+      // 自動判斷
+      const ginoHas = CARDS.Gino.some(c => bankName.includes(c.bank) || bankName.includes(c.name));
+      const lolaHas = CARDS.Lola.some(c => bankName.includes(c.bank) || bankName.includes(c.name));
+      if (ginoHas && !lolaHas) finalOwner = 'Gino';
+      else if (lolaHas && !ginoHas) finalOwner = 'Lola';
+    }
+
+    const needsOwnerConfirm = !finalOwner;
+    const autoOwner = finalOwner;
+
+    // 取得指定月份
+    const forceMonth = document.getElementById('upload-month-select')?.value || 'auto';
+
+    parsed.transactions.forEach(t => {
+      // 如果有指定月份，把日期的年月強制換成指定月份，只保留原本的日
+      const finalDate = t.date; // 永遠保留原始消費日期
+
+      // 記帳日期：上傳時選的月份 + 原始日
+      let billingDate = null;
+      if (forceMonth !== 'auto' && t.date) {
+        const day = t.date.split('-')[2] || '01';
+        billingDate = `${forceMonth}-${day}`;
+      }
+
+      const billingMonth = billingDate ? billingDate.slice(0,7) : (finalDate ? finalDate.slice(0,7) : '');
+      const duplicate = allTransactions.find(ex => {
+        const exBilling = ex.billing_date ? ex.billing_date.slice(0,7) : (ex.date ? ex.date.slice(0,7) : '');
+        return exBilling === billingMonth &&
+               ex.date === finalDate &&
+               ex.amount === t.amount;
+      });
+
+      if (duplicate) {
+        duplicates.push({ merchant: t.merchant, amount: t.amount, date: finalDate });
+      } else {
+        allTransactions.push({
+          id: Date.now() + Math.random(),
+          date: finalDate,
+          billing_date: billingDate,
+          merchant: t.merchant,
+          amount: t.amount,
+          card: finalBank,
+          category: t.category || classifyMerchant(t.merchant),
+          owner: autoOwner || '?'
+        });
+        added++;
+      }
+    });
+
+    const monthNote = forceMonth !== 'auto' ? `・計入${forceMonth.split('-')[1]}月` : '';
+    const ownerNote = needsOwnerConfirm ? '⚠️ 持卡人未確認，請手動設定' : `（${autoOwner}・${finalBank}${monthNote}）`;
+    const totalInScreenshot = parsed.total_in_screenshot || '?';
+
+    // 批次存入 Supabase
+    const newTxs = allTransactions.slice(-added);
+    for (const tx of newTxs) {
+      await saveTx(tx);
+    }
+    hideParsing();
+    renderAll();
+
+    if (totalInScreenshot !== '?' && added < (totalInScreenshot - duplicates.length)) {
+      showToast(`⚠️ 截圖共 ${totalInScreenshot} 筆，新增 ${added} 筆，請核對是否有漏讀！`);
+    } else {
+      showToast(`✅ 解析完成！截圖 ${totalInScreenshot} 筆，新增 ${added} 筆 ${ownerNote}`);
+    }
+
+    // 重複資料提醒
+    if (duplicates.length > 0) {
+      const dupList = duplicates.map(d => `・${d.date} ${d.merchant} $${d.amount}`).join('\n');
+      setTimeout(() => {
+        if (confirm(`⚠️ 發現 ${duplicates.length} 筆疑似重複（同日期+同金額）\n請確認是否為不同消費？\n\n${dupList}`)) {
+          duplicates.forEach(async d => {
+            const tx = {
+              id: Date.now() + Math.random(),
+              date: d.date,
+              billing_date: d.billingDate || null,
+              merchant: d.merchant,
+              amount: d.amount,
+              card: finalBank,
+              category: classifyMerchant(d.merchant),
+              owner: autoOwner || '?'
+            };
+            allTransactions.push(tx);
+            await saveTx(tx);
+          });
+          renderAll();
+          showToast(`✅ 已新增 ${duplicates.length} 筆重複記錄`);
+        }
+      }, 500);
+    }
+
+  } catch (err) {
+    hideParsing();
+    showToast(`❌ 解析失敗：${err.message}`);
+    console.error(err);
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('讀取失敗'));
+    r.readAsDataURL(file);
+  });
+}
+
+// ==================== UI HELPERS ====================
+function showParsing(text) {
+  document.getElementById('parsing-text').textContent = text;
+  document.getElementById('parsing-status').classList.add('show');
+}
+
+function hideParsing() {
+  document.getElementById('parsing-status').classList.remove('show');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ==================== INIT ====================
+document.getElementById('current-date').textContent = new Date().toLocaleDateString('zh-TW');
+updateCardSelect('auto');
+updateMonthSelect();
+
+async function initApp() {
+  showParsing('載入資料中...');
+
+  try {
+    // 1. 載入消費記錄
+    const txData = await sb.get('transactions', 'order=date.desc&limit=1000');
+    if (Array.isArray(txData)) allTransactions = txData;
+
+    // 2. 載入卡片設定
+    const cardData = await sb.get('cards', 'order=created_at.asc');
+    if (Array.isArray(cardData) && cardData.length > 0) {
+      CARDS.Gino = cardData.filter(c => c.owner === 'Gino');
+      CARDS.Lola = cardData.filter(c => c.owner === 'Lola');
+    } else {
+      // 第一次：把預設卡片存到 Supabase
+      const allDefaultCards = [...DEFAULT_CARDS.Gino, ...DEFAULT_CARDS.Lola];
+      for (const card of allDefaultCards) {
+        await sb.upsert('cards', card);
+      }
+    }
+
+    // 3. 載入固定開銷
+    const fixedData = await sb.get('fixed_expenses', 'order=created_at.asc');
+    if (Array.isArray(fixedData) && fixedData.length > 0) {
+      fixedExpenses = fixedData.map(e => ({
+        id: e.id, name: e.name, amount: e.amount, month: e.month,
+        owner: e.owner, type: e.type, note: e.note,
+        totalPeriods: e.total_periods, startMonth: e.start_month
+      }));
+    } else {
+      // 第一次：把預設固定開銷存到 Supabase
+      const defaults = [
+        { name: '手機電信費（安）', amount: 0, month: 0, owner: 'Gino', type: 'fixed', note: '每月', total_periods: null, start_month: null },
+        { name: '手機電信費（如）', amount: 0, month: 0, owner: 'Lola', type: 'fixed', note: '每月', total_periods: null, start_month: null },
+        { name: '電費', amount: 0, month: 0, owner: '家庭', type: 'fixed', note: '每月', total_periods: null, start_month: null },
+        { name: '網路費', amount: 0, month: 0, owner: '家庭', type: 'fixed', note: '每月', total_periods: null, start_month: null },
+        { name: '好市多會員', amount: 0, month: 11, owner: '家庭', type: 'fixed', note: '11月', total_periods: null, start_month: null },
+        { name: '汽車保險（丙式）', amount: 0, month: 1, owner: 'Gino', type: 'fixed', note: '1月', total_periods: null, start_month: null },
+        { name: '車貸', amount: 37492, month: 5, owner: 'Gino', type: 'installment', note: '分期8期', total_periods: 8, start_month: 5 },
+      ];
+      for (const d of defaults) {
+        const result = await sb.insert('fixed_expenses', d);
+        if (result && result[0]) {
+          fixedExpenses.push({ id: result[0].id, ...d, totalPeriods: d.total_periods, startMonth: d.start_month });
+        }
+      }
+    }
+
+  } catch(e) {
+    console.error('載入失敗', e);
+    showToast('⚠️ 資料載入失敗，請重新整理');
+  }
+
+  hideParsing();
+  updateCardSelect('auto');
+  renderAll();
+}
+
+initApp();
+
+</script>
+</body>
+</html>
