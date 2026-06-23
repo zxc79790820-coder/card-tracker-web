@@ -641,9 +641,9 @@
   <div class="logo">養樂多一家<span>｜</span>信用卡記帳系統</div>
   <div class="header-meta">
     <div style="display:flex; gap:8px; justify-content:flex-end; margin-bottom:4px;">
-      <button onclick="openCatModal()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">🏷 類別管理</button>
-      <button onclick="openYearlyModal()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">📊 年度總表</button>
-      <button onclick="openAnalysisModal()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">📈 消費分析</button>
+      <button onclick="openCatModal()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">類別管理</button>
+      <button onclick="openYearlyModal()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">年度總表</button>
+      <button onclick="openAnalysisModal()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">消費分析</button>
     </div>
     李安峻<br>
     <span id="current-date"></span>
@@ -655,13 +655,13 @@
   <!-- OWNER TABS -->
   <div style="display:flex; gap:10px; margin-bottom:24px; align-items:center;">
     <button class="owner-btn active" id="owner-all" onclick="setOwner('all',this)">
-      👨‍👩‍ 全家
+      全家
     </button>
     <button class="owner-btn" id="owner-gino" onclick="setOwner('Gino',this)">
-      🧑 Gino
+      Gino
     </button>
     <button class="owner-btn" id="owner-lola" onclick="setOwner('Lola',this)">
-      👩 Lola
+      Lola
     </button>
   </div>
 
@@ -694,7 +694,7 @@
     <div>
       <!-- UPLOAD -->
       <div class="upload-zone" id="upload-zone">
-        <div class="upload-icon">📱</div>
+        
         <div class="upload-text">
           <strong>選擇截圖上傳</strong><br>
           支援網銀消費明細截圖，AI 自動解析分類
@@ -727,12 +727,12 @@
         <div style="display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
           <div style="position:relative; display:inline-block;">
             <button style="background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:10px 22px;font-size:13px;cursor:pointer;font-weight:500;">
-              📂 選擇檔案
+              選擇檔案
             </button>
             <input type="file" id="file-input" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
           </div>
           <button onclick="triggerPaste()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:8px;padding:10px 22px;font-size:13px;cursor:pointer;">
-            📋 貼上截圖 (⌘V)
+            貼上截圖 (⌘V)
           </button>
         </div>
         <div class="upload-hint" style="margin-top:10px;">PNG / JPG · 玉山 · 國泰 · 台新 · 富邦 · 中信</div>
@@ -756,7 +756,7 @@
         <div style="display:flex; align-items:center; gap:10px;">
           <div class="table-title" id="tx-count-label">全部消費</div>
           <button onclick="openManualModal()" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:500;">+ 手動新增</button>
-          <button onclick="exportToCSV()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;">📥 匯出</button>
+          <button onclick="exportToCSV()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;">匯出</button>
         </div>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
           <select id="filter-bank" onchange="filterBank(this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:5px 10px;font-size:11px;outline:none;cursor:pointer;font-family:'DM Mono',monospace;">
@@ -771,7 +771,7 @@
       <!-- TX LIST -->
       <div class="tx-list" id="tx-list">
         <div class="empty-state">
-          <div class="empty-icon">📂</div>
+          
           尚無消費記錄<br>上傳截圖開始記錄
         </div>
       </div>
@@ -783,7 +783,7 @@
       <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
           <div class="panel-title" style="margin:0;">信用卡消費</div>
-          <button onclick="openCardModal()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;">⚙ 管理</button>
+          <button onclick="openCardModal()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;">管理</button>
         </div>
 
         <!-- Gino 卡片（有 section id 控制顯示） -->
@@ -831,7 +831,7 @@
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; width:400px; max-width:90vw;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <div style="font-size:15px; font-weight:500; color:var(--text);">手動新增消費</div>
-      <button onclick="closeManualModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+      <button onclick="closeManualModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">×</button>
     </div>
     <div style="display:grid; gap:10px;">
       <input id="manual-merchant" placeholder="商家名稱" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;width:100%;">
@@ -861,7 +861,7 @@
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; width:400px; max-width:90vw;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <div style="font-size:15px; font-weight:500; color:var(--text);">編輯消費明細</div>
-      <button onclick="closeEditModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+      <button onclick="closeEditModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">×</button>
     </div>
     <div style="display:grid; gap:10px;">
       <input id="edit-merchant" placeholder="商家名稱" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;">
@@ -894,7 +894,7 @@
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; width:420px; max-width:90vw; max-height:85vh; overflow-y:auto;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <div style="font-size:15px; font-weight:500; color:var(--text);">信用卡管理</div>
-      <button onclick="closeCardModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+      <button onclick="closeCardModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">×</button>
     </div>
 
     <!-- 新增表單 -->
@@ -934,7 +934,7 @@
     <!-- Header -->
     <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid var(--border);">
       <div style="font-size:15px; font-weight:500; color:var(--text);">固定開銷設定</div>
-      <button onclick="closeFixedModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+      <button onclick="closeFixedModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">×</button>
     </div>
 
     <div style="display:flex; flex:1; overflow:hidden;">
@@ -1003,7 +1003,7 @@
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px; width:380px; max-width:90vw; max-height:85vh; overflow-y:auto;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
       <div style="font-size:14px; font-weight:500; color:var(--text);">消費類別管理</div>
-      <button onclick="closeCatModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+      <button onclick="closeCatModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">×</button>
     </div>
     <div style="display:flex; gap:8px; margin-bottom:16px;">
       <input id="new-cat-name" placeholder="新類別名稱" style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;">
@@ -1021,7 +1021,7 @@
       <div style="font-size:15px; font-weight:500; color:var(--text);">年度消費總表 <span id="yearly-title" style="color:var(--text3); font-size:13px;"></span></div>
       <div style="display:flex; gap:8px;">
         <select id="yearly-year" onchange="renderYearlyTable()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 10px;font-size:12px;outline:none;"></select>
-        <button onclick="closeYearlyModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+        <button onclick="closeYearlyModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">×</button>
       </div>
     </div>
     <div style="overflow-x:auto; padding:20px;">
@@ -1037,7 +1037,7 @@
       <div style="font-size:15px; font-weight:500; color:var(--text);">消費類別分析</div>
       <div style="display:flex; gap:8px;">
         <select id="analysis-year" onchange="renderAnalysisTable()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 10px;font-size:12px;outline:none;"></select>
-        <button onclick="closeAnalysisModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+        <button onclick="closeAnalysisModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">×</button>
       </div>
     </div>
     <div style="overflow-x:auto; padding:20px;">
@@ -1051,7 +1051,7 @@
   <div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px; width:360px; max-width:90vw;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
       <div style="font-size:14px; font-weight:500; color:var(--text);">編輯固定開銷</div>
-      <button onclick="closeEditFixed()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">✕</button>
+      <button onclick="closeEditFixed()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;">×</button>
     </div>
     <div style="display:grid; gap:10px;">
       <input id="ef-name" placeholder="項目名稱" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;width:100%;box-sizing:border-box;">
@@ -1325,7 +1325,7 @@ function renderList() {
   const el = document.getElementById('tx-list');
 
   if (txs.length === 0) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div>沒有符合的記錄</div>`;
+    el.innerHTML = `<div class="empty-state">沒有符合的記錄</div>`;
     return;
   }
 
@@ -1369,9 +1369,9 @@ function renderList() {
               border:1px solid ${t.budgeted ? '#ffd166' : 'var(--border)'};
               background:${t.budgeted ? 'rgba(255,209,102,0.15)' : 'transparent'};
               color:${t.budgeted ? '#ffd166' : 'var(--text3)'};
-            ">${t.budgeted ? '✓預算' : '+預算'}</button>` : ''}
-            <button onclick="openEditModal('${t.id}')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);">✏️</button>
-            <button onclick="deleteTx('${t.id}')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,107,107,0.3);background:transparent;color:#ff8a8a;">🗑</button>
+            ">${t.budgeted ? '已編' : '+預算'}</button>` : ''}
+            <button onclick="openEditModal('${t.id}')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);">編</button>
+            <button onclick="deleteTx('${t.id}')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,107,107,0.3);background:transparent;color:#ff8a8a;">刪</button>
           </div>
         </div>
       </div>
@@ -1548,7 +1548,7 @@ async function saveManualTx() {
   });
 
   if (duplicate) {
-    if (!confirm(`⚠️ 已有相同記錄：\n${date} ${merchant} $${amount}\n\n仍要新增？`)) return;
+    if (!confirm(`已有相同記錄：\n${date} ${merchant} $${amount}\n\n仍要新增？`)) return;
   }
 
   const tx = {
@@ -1560,7 +1560,7 @@ async function saveManualTx() {
   await saveTx(tx);
   renderAll();
   closeManualModal();
-  showToast(`✅ 已新增：${merchant} $${amount}`);
+  showToast(`已新增：${merchant} $${amount}`);
 }
 
 // ==================== 匯出 Excel ====================
@@ -1595,7 +1595,7 @@ function exportToCSV() {
   a.download = `卡費記錄_${month}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast(`✅ 已匯出 ${txs.length} 筆記錄`);
+  showToast(`已匯出 ${txs.length} 筆記錄`);
 }
 
 // ==================== 編輯 & 刪除 ====================
@@ -1671,7 +1671,7 @@ async function saveEdit() {
   console.log('updateResult:', updateResult);
   closeEditModal();
   renderAll();
-  showToast('✅ 已儲存');
+  showToast('已儲存');
 }
 
 async function deleteTx(id) {
@@ -1769,7 +1769,7 @@ async function addCard() {
   ['ci-name','ci-bank','ci-billing','ci-payment'].forEach(i => document.getElementById(i).value = '');
   renderCardModalList();
   renderAll();
-  showToast(`✅ 已新增：${owner} 的 ${name}`);
+  showToast(`已新增：${owner} 的 ${name}`);
 }
 
 async function deleteCard(owner, id) {
@@ -2008,7 +2008,7 @@ async function addFixedExpense() {
       inserted++;
     }
 
-    showToast(`✅ 已新增 ${inserted} 筆分期記錄：${name}`);
+    showToast(`已新增 ${inserted} 筆分期記錄：${name}`);
 
   } else {
     amount = parseInt(document.getElementById('fi-amount').value) || 0;
@@ -2023,7 +2023,7 @@ async function addFixedExpense() {
       id: result?.[0]?.id || Date.now(),
       name, amount, month, owner, type: 'fixed', note
     });
-    showToast(`✅ 已新增：${name}`);
+    showToast(`已新增：${name}`);
   }
 
   ['fi-name','fi-amount','fi-note','fi-total-periods','fi-current-period','fi-total-amount','fi-period-amount'].forEach(id => {
@@ -2141,7 +2141,7 @@ async function saveEditFixed() {
   closeEditFixed();
   renderFixedModalList();
   renderFixedExpenses();
-  showToast('✅ 已儲存');
+  showToast('已儲存');
 }
 
 // ==================== FILTERS ====================
@@ -2173,7 +2173,7 @@ async function toggleBudget(id) {
   tx.budgeted = !tx.budgeted;
   await sb.update('transactions', tx.id, { budgeted: tx.budgeted });
   renderAll();
-  showToast(tx.budgeted ? `✅ 已標記為已編預算` : `❌ 已取消預算標記`);
+  showToast(tx.budgeted ? `已標記為已編預算` : `已取消預算標記`);
 }
 
 function filterCat(cat, btn) {
@@ -2340,7 +2340,7 @@ async function parseImageWithAI(file) {
     });
 
     const monthNote = forceMonth !== 'auto' ? `・計入${forceMonth.split('-')[1]}月` : '';
-    const ownerNote = needsOwnerConfirm ? '⚠️ 持卡人未確認，請手動設定' : `（${autoOwner}・${finalBank}${monthNote}）`;
+    const ownerNote = needsOwnerConfirm ? '持卡人未確認，請手動設定' : `（${autoOwner}・${finalBank}${monthNote}）`;
     const totalInScreenshot = parsed.total_in_screenshot || '?';
 
     // 批次存入 Supabase
@@ -2352,16 +2352,16 @@ async function parseImageWithAI(file) {
     renderAll();
 
     if (totalInScreenshot !== '?' && added < (totalInScreenshot - duplicates.length)) {
-      showToast(`⚠️ 截圖共 ${totalInScreenshot} 筆，新增 ${added} 筆，請核對是否有漏讀！`);
+      showToast(`截圖共 ${totalInScreenshot} 筆，新增 ${added} 筆，請核對是否有漏讀！`);
     } else {
-      showToast(`✅ 解析完成！截圖 ${totalInScreenshot} 筆，新增 ${added} 筆 ${ownerNote}`);
+      showToast(`解析完成！截圖 ${totalInScreenshot} 筆，新增 ${added} 筆 ${ownerNote}`);
     }
 
     // 重複資料提醒
     if (duplicates.length > 0) {
       const dupList = duplicates.map(d => `・${d.date} ${d.merchant} $${d.amount}`).join('\n');
       setTimeout(() => {
-        if (confirm(`⚠️ 發現 ${duplicates.length} 筆疑似重複（同日期+同金額）\n請確認是否為不同消費？\n\n${dupList}`)) {
+        if (confirm(`發現 ${duplicates.length} 筆疑似重複（同日期+同金額）\n請確認是否為不同消費？\n\n${dupList}`)) {
           duplicates.forEach(async d => {
             const tx = {
               id: Date.now() + Math.random(),
@@ -2377,14 +2377,14 @@ async function parseImageWithAI(file) {
             await saveTx(tx);
           });
           renderAll();
-          showToast(`✅ 已新增 ${duplicates.length} 筆重複記錄`);
+          showToast(`已新增 ${duplicates.length} 筆重複記錄`);
         }
       }, 500);
     }
 
   } catch (err) {
     hideParsing();
-    showToast(`❌ 解析失敗：${err.message}`);
+    showToast(`解析失敗：${err.message}`);
     console.error(err);
   }
 }
@@ -2437,7 +2437,7 @@ async function addCategory() {
   document.getElementById('new-cat-name').value = '';
   renderCatModalList();
   renderAll();
-  showToast(`✅ 已新增類別：${name}`);
+  showToast(`已新增類別：${name}`);
 }
 
 async function renameCategory(oldName) {
@@ -2476,7 +2476,7 @@ async function renameCategory(oldName) {
   if (catId) await sb.update('categories', catId, { name: newName });
   renderCatModalList();
   renderAll();
-  showToast(`✅ 已將「${oldName}」改名為「${newName}」`);
+  showToast(`已將「${oldName}」改名為「${newName}」`);
 }
 
 async function deleteCategory(name) {
@@ -2753,7 +2753,7 @@ async function initApp() {
 
   } catch(e) {
     console.error('載入失敗', e);
-    showToast('⚠️ 資料載入失敗，請重新整理');
+    showToast('資料載入失敗，請重新整理');
   }
 
   hideParsing();
