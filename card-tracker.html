@@ -1112,7 +1112,7 @@ const sb = {
 let allTransactions = [];
 let currentOwner = 'all';
 let currentFilter = 'all';
-let currentMonth = 'all';
+let currentMonth = new Date().toISOString().slice(0,7);
 let uploadOwner = 'auto'; // 上傳前選擇的持卡人
 let uploadCard = 'auto';  // 上傳前選擇的卡別
 
