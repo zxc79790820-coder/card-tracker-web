@@ -1452,10 +1452,8 @@ function renderCardBreakdown() {
     const checkDate = t.billing_date || t.date;
     return checkDate && checkDate.startsWith(currentMonth);
   });
-  txs = txs.filter(t => t.amount > 0);
-
   const totals = {};
-  txs.forEach(t => {
+  txs.filter(t => t.amount !== 0).forEach(t => {
     const key = (t.owner || 'Gino') + '|' + t.card;
     totals[key] = (totals[key] || 0) + t.amount;
   });
