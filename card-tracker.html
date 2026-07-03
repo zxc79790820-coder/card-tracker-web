@@ -1221,12 +1221,19 @@ async function saveData() {
 }
 
 async function saveTx(tx) {
-  await sb.upsert('transactions', {
+  const result = await sb.upsert('transactions', {
     id: tx.id, date: tx.date, merchant: tx.merchant,
     amount: tx.amount, card: tx.card, category: tx.category,
     owner: tx.owner, budgeted: tx.budgeted || false,
     billing_date: tx.billing_date ? (tx.billing_date.length === 7 ? tx.billing_date + '-01' : tx.billing_date) : null
   });
+  // Supabase 成功回傳陣列；失敗回傳含 code/message 的物件（例如撞到重複索引的 23505）
+  if (!Array.isArray(result)) {
+    const reason = result?.code === '23505' ? '資料庫判定為重複資料' : (result?.message || '未知錯誤');
+    showToast(`⚠️ 儲存失敗：${tx.date} ${tx.merchant} $${(tx.amount||0).toLocaleString()}（${reason}）`);
+    return false;
+  }
+  return true;
 }
 
 async function deleteTxRemote(id) {
@@ -2321,23 +2328,22 @@ async function parseImageWithAI(file) {
       // 如果有指定月份，把日期的年月強制換成指定月份，只保留原本的日
       const finalDate = t.date; // 永遠保留原始消費日期
 
-      // 記帳日期：上傳時選的月份 + 原始日
-      let billingDate = null;
-      if (forceMonth !== 'auto' && t.date) {
-        const day = t.date.split('-')[2] || '01';
-        billingDate = `${forceMonth}-${day}`;
-      }
+      // 記帳月份：統一存「月份-01」，與 LINE bot 格式一致，資料庫去重索引才會生效
+      const billingDate = forceMonth !== 'auto'
+        ? `${forceMonth}-01`
+        : (t.date ? `${t.date.slice(0,7)}-01` : null);
 
       const billingMonth = billingDate ? billingDate.slice(0,7) : (finalDate ? finalDate.slice(0,7) : '');
       const duplicate = allTransactions.find(ex => {
         const exBilling = ex.billing_date ? ex.billing_date.slice(0,7) : (ex.date ? ex.date.slice(0,7) : '');
         return exBilling === billingMonth &&
                ex.date === finalDate &&
-               ex.amount === t.amount;
+               ex.amount === t.amount &&
+               ex.card === finalBank;
       });
 
       if (duplicate) {
-        duplicates.push({ merchant: t.merchant, amount: t.amount, date: finalDate });
+        duplicates.push({ merchant: t.merchant, amount: t.amount, date: finalDate, billingDate });
       } else {
         allTransactions.push({
           id: Date.now() + Math.random(),
