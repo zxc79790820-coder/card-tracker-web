@@ -2339,7 +2339,8 @@ async function parseImageWithAI(file) {
         return exBilling === billingMonth &&
                ex.date === finalDate &&
                ex.amount === t.amount &&
-               ex.card === finalBank;
+               ex.card === finalBank &&
+               (!autoOwner || ex.owner === autoOwner);
       });
 
       if (duplicate) {
