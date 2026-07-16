@@ -810,14 +810,18 @@
       <!-- 固定開銷面板 -->
       <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-          <div class="panel-title" style="margin:0;">本月固定開銷</div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button onclick="shiftFixedMonth(-1)" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);width:22px;height:22px;font-size:13px;cursor:pointer;line-height:1;padding:0;">‹</button>
+            <div class="panel-title" style="margin:0;cursor:pointer;" id="fixed-panel-title" onclick="resetFixedMonth()" title="點擊回到本月">本月固定開銷</div>
+            <button onclick="shiftFixedMonth(1)" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);width:22px;height:22px;font-size:13px;cursor:pointer;line-height:1;padding:0;">›</button>
+          </div>
           <button onclick="openFixedModal()" style="background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:500;">+ 設定</button>
         </div>
         <div id="fixed-expense-list">
           <div style="color:var(--text3);font-size:12px;text-align:center;padding:12px 0;">尚未設定固定開銷</div>
         </div>
         <div id="fixed-expense-total" style="display:none; border-top:1px solid var(--border); margin-top:12px; padding-top:10px; display:flex; justify-content:space-between;">
-          <span style="font-size:12px; color:var(--text2);">本月合計</span>
+          <span style="font-size:12px; color:var(--text2);" id="fixed-total-label">本月合計</span>
           <span style="font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:var(--accent);" id="fixed-total-amount">$0</span>
         </div>
       </div>
@@ -1828,6 +1832,19 @@ function renderCardModalList() {
 // ==================== 固定開銷 ====================
 let fixedExpenses = [];
 let fixedModalMonth = 0; // 0=每月, 1-12=各月份
+let fixedPanelMonth = null; // null=跟隨上方月份篩選；1-12=面板獨立選的月份
+
+function shiftFixedMonth(delta) {
+  const cur = fixedPanelMonth ?? getCurrentMonth();
+  const next = ((cur - 1 + delta) + 12) % 12 + 1;
+  fixedPanelMonth = (next === getCurrentMonth()) ? null : next;
+  renderFixedExpenses();
+}
+
+function resetFixedMonth() {
+  fixedPanelMonth = null;
+  renderFixedExpenses();
+}
 
 async function saveFixed() {}
 
@@ -1858,8 +1875,15 @@ function getExpensesForMonth(month) {
 }
 
 function renderFixedExpenses() {
-  const month = getCurrentMonth();
+  const month = fixedPanelMonth ?? getCurrentMonth();
   const currentYear = new Date().getFullYear();
+
+  // 面板標題與合計文字跟著顯示的月份走
+  const titleEl = document.getElementById('fixed-panel-title');
+  const totalLabelEl = document.getElementById('fixed-total-label');
+  const following = fixedPanelMonth === null;
+  if (titleEl) titleEl.textContent = following ? '本月固定開銷' : `${month}月固定開銷`;
+  if (totalLabelEl) totalLabelEl.textContent = following ? '本月合計' : `${month}月合計`;
   const items = fixedExpenses.filter(e => {
     if (e.month === 0) return true; // 每月
     if (e.month !== month) return false;
